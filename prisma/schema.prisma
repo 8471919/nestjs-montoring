@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  nickname  String    @unique
+  createdAt DateTime  @default(now()) @db.Timestamp(3)
+  updatedAt DateTime  @updatedAt @db.Timestamp(3)
+  deletedAt DateTime?  @db.Timestamp(3)
+  comments  Comment[]
+  posts     Post[]
+}
+
+model Post {
+  id        Int       @id @default(autoincrement())
+  title     String
+  content   String
+  createdAt DateTime  @default(now()) @db.Timestamp(3)
+  updatedAt DateTime  @updatedAt @db.Timestamp(3)
+  deletedAt DateTime?  @db.Timestamp(3)
+  userId    Int
+  comments  Comment[]
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Post_userId_fkey")
+}
+
+model Comment {
+  id        Int       @id @default(autoincrement())
+  content   String
+  parentId  Int?
+  userId    Int
+  postId    Int
+  createdAt DateTime  @default(now()) @db.Timestamp(3)
+  updatedAt DateTime  @updatedAt @db.Timestamp(3)
+  deletedAt DateTime?  @db.Timestamp(3)
+  parent    Comment?  @relation("ParentChild", fields: [parentId], references: [id])
+  child     Comment[] @relation("ParentChild")
+  post      Post      @relation(fields: [postId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@index([parentId], map: "Comment_parentId_fkey")
+  @@index([postId], map: "Comment_postId_fkey")
+  @@index([userId], map: "Comment_userId_fkey")
+}
